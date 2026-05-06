@@ -3,3 +3,23 @@
 2026-05-06 09:36:16 | INFO | core.logging_config | Logging started at 2026-05-06 09:36:16
 2026-05-06 09:36:32 | INFO | core.logging_config | Health check called
 2026-05-06 09:37:59 | INFO | core.logging_config | Query received | model=gpt-4o-mini | has_image=False
+2026-05-06 10:24:42 | INFO | core.logging_config | Logging started at 2026-05-06 10:24:42
+2026-05-06 10:24:47 | INFO | core.logging_config | Health check called
+2026-05-06 10:25:48 | INFO | core.logging_config | Query received | model=gpt-4o-mini | has_image=False
+2026-05-06 10:25:48 | INFO | core.logging_config | Pipeline starting | query=Explain what LangGraph is model
+2026-05-06 10:25:48 | INFO | core.logging_config | Graph: entering planner node
+2026-05-06 10:25:48 | INFO | core.logging_config | Planner Agent started | query=Explain what LangGraph is model
+2026-05-06 10:25:48 | INFO | core.logging_config | Planner Agent completed successfully
+2026-05-06 10:25:48 | INFO | core.logging_config | Graph: entering search node
+2026-05-06 10:25:48 | INFO | core.logging_config | Search Agent started | query=Explain what LangGraph is model
+2026-05-06 10:25:48 | INFO | core.logging_config | Search Agent completed successfully
+2026-05-06 10:25:48 | INFO | core.logging_config | Graph: entering vision node
+2026-05-06 10:25:48 | INFO | core.logging_config | Vision Agent started | has_image=False
+2026-05-06 10:25:48 | INFO | core.logging_config | No image provided - Vision Agent skipping
+2026-05-06 10:25:48 | INFO | core.logging_config | Graph: entering summarizer node
+2026-05-06 10:25:48 | INFO | core.logging_config | Summarizer Agent started
+2026-05-06 10:25:48 | INFO | core.logging_config | Summarizer Agent completed successfully
+2026-05-06 10:25:48 | INFO | core.logging_config | Graph: entering report node
+2026-05-06 10:25:48 | INFO | core.logging_config | Report Agent started
+2026-05-06 10:25:48 | INFO | core.logging_config | Report Agent completed successfully
+2026-05-06 10:25:48 | INFO | core.logging_config | Pipeline completed | steps=['planner', 'search', 'vision', 'summarizer', 'report']
