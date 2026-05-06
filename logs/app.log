@@ -1,0 +1,5 @@
+2026-05-06 09:34:23 | INFO | core.logging_config | Logging started at 2026-05-06 09:34:23
+2026-05-06 09:34:23 | INFO | core.logging_config | Test log works
+2026-05-06 09:36:16 | INFO | core.logging_config | Logging started at 2026-05-06 09:36:16
+2026-05-06 09:36:32 | INFO | core.logging_config | Health check called
+2026-05-06 09:37:59 | INFO | core.logging_config | Query received | model=gpt-4o-mini | has_image=False
