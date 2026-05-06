@@ -22,9 +22,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FILE: str = "logs/app.log"
 
-    class Config:
-        env_file = ".env"
-        extra = "allow"
+    model_config = {"env_file": ".env", "extra": "allow"}
 
 # Single instance used across entire app
 settings = Settings()
