@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, END
 from typing import TypedDict, Optional
-from utils import MockLLM
+from langchain_openai import ChatOpenAI
 from agents.planner import run_planner
 from agents.search import run_search
 from agents.vision import run_vision
@@ -8,7 +8,7 @@ from agents.summarizer import run_summarizer
 from agents.report import run_report
 from core.logging_config import logger
 
-# ── State — shared memory passed between all agents ──
+# ── State ────────────────────────────────────────────
 class AgentState(TypedDict):
     query: str
     model: str
@@ -21,11 +21,15 @@ class AgentState(TypedDict):
     steps_completed: list
     error: Optional[str]
 
-# ── Agent node functions ──────────────────────────────
+# ── Helper ───────────────────────────────────────────
+def get_llm(model: str):
+    """Returns real OpenAI LLM"""
+    return ChatOpenAI(model=model, temperature=0.7)
 
+# ── Agent nodes ──────────────────────────────────────
 def planner_node(state: AgentState) -> AgentState:
     logger.info("Graph: entering planner node")
-    llm = MockLLM()
+    llm = get_llm(state["model"])
     result = run_planner(state["query"], llm)
     state["plan"] = result["result"]
     state["steps_completed"].append("planner")
@@ -33,7 +37,7 @@ def planner_node(state: AgentState) -> AgentState:
 
 def search_node(state: AgentState) -> AgentState:
     logger.info("Graph: entering search node")
-    llm = MockLLM()
+    llm = get_llm(state["model"])
     result = run_search(state["query"], llm, state["plan"])
     state["search_results"] = result["result"]
     state["steps_completed"].append("search")
@@ -41,7 +45,7 @@ def search_node(state: AgentState) -> AgentState:
 
 def vision_node(state: AgentState) -> AgentState:
     logger.info("Graph: entering vision node")
-    llm = MockLLM()
+    llm = get_llm(state["model"])
     result = run_vision(state["query"], llm, state.get("image_bytes"))
     state["vision_result"] = result["result"]
     state["steps_completed"].append("vision")
@@ -49,7 +53,7 @@ def vision_node(state: AgentState) -> AgentState:
 
 def summarizer_node(state: AgentState) -> AgentState:
     logger.info("Graph: entering summarizer node")
-    llm = MockLLM()
+    llm = get_llm(state["model"])
     result = run_summarizer(state["query"], llm, state["search_results"])
     state["summary"] = result["result"]
     state["steps_completed"].append("summarizer")
@@ -57,7 +61,7 @@ def summarizer_node(state: AgentState) -> AgentState:
 
 def report_node(state: AgentState) -> AgentState:
     logger.info("Graph: entering report node")
-    llm = MockLLM()
+    llm = get_llm(state["model"])
     result = run_report(
         state["query"], llm,
         state["summary"],
@@ -67,26 +71,20 @@ def report_node(state: AgentState) -> AgentState:
     state["steps_completed"].append("report")
     return state
 
-# ── Build the Graph ───────────────────────────────────
-
+# ── Build Graph ──────────────────────────────────────
 def build_graph() -> StateGraph:
     graph = StateGraph(AgentState)
-
-    # Add all 5 agents as nodes
     graph.add_node("planner", planner_node)
     graph.add_node("search", search_node)
     graph.add_node("vision", vision_node)
     graph.add_node("summarizer", summarizer_node)
     graph.add_node("report", report_node)
-
-    # Define the flow: planner → search → vision → summarizer → report → END
     graph.set_entry_point("planner")
     graph.add_edge("planner", "search")
     graph.add_edge("search", "vision")
     graph.add_edge("vision", "summarizer")
     graph.add_edge("summarizer", "report")
     graph.add_edge("report", END)
-
     return graph.compile()
 
 def run_agent_pipeline(
@@ -94,14 +92,8 @@ def run_agent_pipeline(
     model: str = "gpt-4o-mini",
     image_bytes: bytes = None
 ) -> dict:
-    """
-    Main function called by FastAPI.
-    Runs the full 5-agent pipeline and returns final report.
-    """
     logger.info(f"Pipeline starting | query={query[:50]}")
-
     graph = build_graph()
-
     initial_state = AgentState(
         query=query,
         model=model,
@@ -114,7 +106,6 @@ def run_agent_pipeline(
         steps_completed=[],
         error=None
     )
-
     try:
         final_state = graph.invoke(initial_state)
         logger.info(f"Pipeline completed | steps={final_state['steps_completed']}")
