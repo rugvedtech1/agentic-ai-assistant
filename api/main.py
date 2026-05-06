@@ -1,5 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from typing import Optional
 import uvicorn
 
@@ -8,18 +10,29 @@ from core.logging_config import logger
 from api.schemas import QueryRequest, AgentResponse
 from agents.graph import run_agent_pipeline
 
+# Create FastAPI app instance
 app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="Multi-Agent Research + Vision Assistant"
 )
 
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve static files (our UI)
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/ui")
+async def serve_ui():
+    return FileResponse("static/index.html")
+
+# ─── Routes ───────────────────────────────────────────────
 
 @app.get("/")
 async def root():
@@ -72,6 +85,8 @@ async def query(
             error=str(e),
             model_used=model,
         )
+
+# ─── Run ──────────────────────────────────────────────────
 
 if __name__ == "__main__":
     uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)

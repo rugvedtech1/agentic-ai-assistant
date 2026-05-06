@@ -43,3 +43,5 @@
 2026-05-06 05:57:19 | INFO | core.logging_config | Report Agent started
 2026-05-06 05:57:19 | INFO | core.logging_config | Report Agent completed successfully
 2026-05-06 05:57:19 | INFO | core.logging_config | Pipeline completed | steps=['planner', 'search', 'vision', 'summarizer', 'report']
+2026-05-06 06:00:45 | INFO | core.logging_config | Logging started at 2026-05-06 06:00:45
+2026-05-06 06:01:02 | INFO | core.logging_config | Health check called
