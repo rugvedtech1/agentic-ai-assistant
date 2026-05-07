@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     # API Keys - these come from .env file
     OPENAI_API_KEY: str = ""
     TAVILY_API_KEY: str = ""
+    SERPAPI_KEY: str = ""
 
     # Model settings
     DEFAULT_MODEL: str = "gpt-4o-mini"

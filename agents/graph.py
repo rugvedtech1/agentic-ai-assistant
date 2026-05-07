@@ -8,7 +8,6 @@ from agents.summarizer import run_summarizer
 from agents.report import run_report
 from core.logging_config import logger
 
-# ── State ────────────────────────────────────────────
 class AgentState(TypedDict):
     query: str
     model: str
@@ -21,12 +20,9 @@ class AgentState(TypedDict):
     steps_completed: list
     error: Optional[str]
 
-# ── Helper ───────────────────────────────────────────
 def get_llm(model: str):
-    """Returns real OpenAI LLM"""
     return ChatOpenAI(model=model, temperature=0.7)
 
-# ── Agent nodes ──────────────────────────────────────
 def planner_node(state: AgentState) -> AgentState:
     logger.info("Graph: entering planner node")
     llm = get_llm(state["model"])
@@ -35,20 +31,27 @@ def planner_node(state: AgentState) -> AgentState:
     state["steps_completed"].append("planner")
     return state
 
-def search_node(state: AgentState) -> AgentState:
-    logger.info("Graph: entering search node")
-    llm = get_llm(state["model"])
-    result = run_search(state["query"], llm, state["plan"])
-    state["search_results"] = result["result"]
-    state["steps_completed"].append("search")
-    return state
-
 def vision_node(state: AgentState) -> AgentState:
+    """Vision runs BEFORE search so results feed into search"""
     logger.info("Graph: entering vision node")
     llm = get_llm(state["model"])
     result = run_vision(state["query"], llm, state.get("image_bytes"))
     state["vision_result"] = result["result"]
     state["steps_completed"].append("vision")
+    return state
+
+def search_node(state: AgentState) -> AgentState:
+    """Search uses vision results to find info about what's in image"""
+    logger.info("Graph: entering search node")
+    llm = get_llm(state["model"])
+    result = run_search(
+        state["query"],
+        llm,
+        state["plan"],
+        state["vision_result"]  # ← pass vision results here!
+    )
+    state["search_results"] = result["result"]
+    state["steps_completed"].append("search")
     return state
 
 def summarizer_node(state: AgentState) -> AgentState:
@@ -71,18 +74,19 @@ def report_node(state: AgentState) -> AgentState:
     state["steps_completed"].append("report")
     return state
 
-# ── Build Graph ──────────────────────────────────────
 def build_graph() -> StateGraph:
     graph = StateGraph(AgentState)
     graph.add_node("planner", planner_node)
+    graph.add_node("vision", vision_node)    # ← vision runs first now!
     graph.add_node("search", search_node)
-    graph.add_node("vision", vision_node)
     graph.add_node("summarizer", summarizer_node)
     graph.add_node("report", report_node)
+
+    # New order: planner → vision → search → summarizer → report
     graph.set_entry_point("planner")
-    graph.add_edge("planner", "search")
-    graph.add_edge("search", "vision")
-    graph.add_edge("vision", "summarizer")
+    graph.add_edge("planner", "vision")
+    graph.add_edge("vision", "search")
+    graph.add_edge("search", "summarizer")
     graph.add_edge("summarizer", "report")
     graph.add_edge("report", END)
     return graph.compile()
